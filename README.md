@@ -12,7 +12,7 @@ asns[36375]
 ```
 
 From command line:
-```
+```sh
 # write json data to out.txt
 python asn_scraper.py out.txt
 head out.txt
