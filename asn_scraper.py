@@ -11,6 +11,15 @@ def url_to_soup(url):
     soup = bs4.BeautifulSoup(html)
     return soup
 
+def _get_country_url(row, base_url):
+    ''' Return (url, country_code) tuple from a table row '''
+    tds = row.findAll('td')
+    href = base_url + tds[3].find('a').get('href')
+    country_code = tds[1].getText().strip()
+    if (len(country_code) != 2):
+        raise RuntimeError('Invalid country code {}'.format(country_code))
+    return (href, country_code)
+
 def get_asn_country_urls():
     ''' Return list of url strings '''
     base_url = 'http://bgp.he.net'
@@ -20,11 +29,12 @@ def get_asn_country_urls():
     if len(country_table) > 1:
         raise RuntimeError('More than one table at {}'.format(
             world_asn_url))
-    country_a_tags = country_table[0].findAll('a')
-    country_urls = [base_url + c.get('href') for c in country_a_tags]
+    rows = country_table[0].findAll('tr')
+    rows = rows[1:] # remove header
+    country_urls = [_get_country_url(r, base_url) for r in rows]
     return country_urls
 
-def get_asns_from_country(asn_country_url):
+def get_asns_from_country(asn_country_url, country_code):
     asn_country = url_to_soup(asn_country_url)
     asn_table = asn_country.findAll('table')
     if len(asn_table) > 1:
@@ -33,10 +43,10 @@ def get_asns_from_country(asn_country_url):
     asn_tr_tags = asn_table[0].findAll('tr')
     asn_tr_tags = asn_tr_tags[1:] # remove headers
     # TODO get real country code
-    asns = [build_asn_from_tag(a, 'US') for a in asn_tr_tags]
+    asns = [_build_asn_from_tag(a, country_code) for a in asn_tr_tags]
     return asns
 
-def build_asn_from_tag(asn_tr_tag, country_code):
+def _build_asn_from_tag(asn_tr_tag, country_code):
     tds = asn_tr_tag.findAll('td')
     asn_number = tds[0].getText().strip('AS')
     name = tds[1].getText()
