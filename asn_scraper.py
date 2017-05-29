@@ -13,7 +13,7 @@ def url_to_soup(url):
 def get_all_asns():
     '''
     Return a dictionary with info for each ASN
-    Key is ASN number
+    Key is ASN
     Value is a dictionary containing information about the ASN, for example
         {'Country': 'US',
         'Name': 'University of Michigan',
@@ -53,7 +53,7 @@ def get_asns_from_country(asn_country_url, country_code):
     asn_country = url_to_soup(asn_country_url)
     asn_table = asn_country.findAll('table')
     if not asn_table:
-        # some countries have no actives ASNS
+        # some countries have no actives ASNs
         return []
 
     if len(asn_table) > 1:
@@ -61,7 +61,6 @@ def get_asns_from_country(asn_country_url, country_code):
             'table found.').format(asn_country_url))
     asn_tr_tags = asn_table[0].findAll('tr')
     asn_tr_tags = asn_tr_tags[1:] # remove headers
-    # TODO get real country code
     asns = [_build_asn_from_tag(a, country_code) for a in asn_tr_tags]
     return asns
 
