@@ -1,15 +1,16 @@
 import bs4
 import json
+import sys
 import urllib2
 
 def url_to_soup(url):
     # bgp.he.net filters based on user-agent.
     req = urllib2.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
     html = urllib2.urlopen(req).read()
-    soup = bs4.BeautifulSoup(html)
+    soup = bs4.BeautifulSoup(html, 'lxml')
     return soup
 
-def get_all_asns(outfile=None):
+def get_all_asns():
     '''
     Return a dictionary with info for each ASN
     Key is ASN number
@@ -22,10 +23,6 @@ def get_all_asns(outfile=None):
     asns = dict()
     for c in get_asn_country_urls():
         asns.update(get_asns_from_country(c[0], c[1]))
-
-    if outfile:
-        with open(outfile, 'w') as f:
-            json.dump(asns, f, indent=4, sort_keys=True)
 
     return asns
 
@@ -79,4 +76,15 @@ def _build_asn_from_tag(asn_tr_tag, country_code):
     v6_routes = str_to_int(tds[5].getText())
     return (asn_number, {'Country': country_code,
         'Name': name, 'Routes v4': v4_routes, 'Routes v6': v6_routes})
+
+def main():
+    if len(sys.argv) != 2:
+        raise RuntimeError('Provide filename for output')
+
+    asns = get_all_asns()
+    outfile = sys.argv[1]
+    with open(outfile, 'w') as f:
+        json.dump(asns, f, indent=4, sort_keys=True)
     
+if __name__ == "__main__":
+    main()
